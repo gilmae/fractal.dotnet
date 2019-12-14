@@ -7,7 +7,7 @@ namespace mandelbrot.net
         {
             if (Math.Pow(real + 1.0, 2.0) + Math.Pow(imag, 2.0) <= 0.0625)
             {
-                return new ICalculator.Result { Escaped = false, Iterations = int.MaxValue };
+                return new ICalculator.Result { Escaped = false, Iterations = int.MaxValue, HasResult = true };
             }
             return new ICalculator.Result();
         }

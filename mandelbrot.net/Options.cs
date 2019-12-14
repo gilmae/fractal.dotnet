@@ -5,7 +5,7 @@ namespace mandelbrot.net
 {
     public class Options
     {
-        private const string defaultGradient = "[['0.0', '000764'],['0.16', '026bcb'],['0.42', 'edffff'],['0.6425', 'ffaa00'],['0.8675', '000200'],['1.0', '000764']]";
+        private const string defaultGradient = "[['0.0', 'ff0000'],['0.16', 'ff7f00'],['0.33', 'ffff00'],['0.5', '00ff00'],['0.66', '0000ff'],['0.83', '4b0082'],['1.0','9400d3']]";
 
         [Option('r', "real", Required = false, Default=-0.75, HelpText = "Set output to verbose messages.")]
         public double Real { get; set; }
@@ -28,7 +28,7 @@ namespace mandelbrot.net
         [Option('m', "max", Default = 1000, Required = false)]
         public int MaxIterations { get; set; }
 
-        [Option('c', "colourmode", Default="none", Required=false]
+        [Option('c', "colourmode", Default=ColourMode.True, Required=false)]
         public ColourMode Colouring { get; set; }
 
     }

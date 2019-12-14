@@ -28,7 +28,7 @@ namespace mandelbrot.net
                 iteration += 1;
             }
 
-            return new ICalculator.Result { Escaped = iteration < _maxIterations, Iterations = iteration };
+            return new ICalculator.Result { Escaped = iteration < _maxIterations, Iterations = iteration, HasResult = true };
         }
     }
 }
