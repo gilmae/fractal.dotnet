@@ -35,6 +35,7 @@ namespace mandelbrot.net
         static async Task MainAsync(string[] args)
         {
             var o = ((Parsed<Options>)Parser.Default.ParseArguments<Options>(args)).Value;
+
             escapeCalc = new EscapeTimeCalculator(o.MaxIterations);
 
             var image = new Image<Rgba32>(o.Width, o.Height);
@@ -70,7 +71,8 @@ namespace mandelbrot.net
             Plotter plotter = new Plotter(points.Reader, channel.Writer, new[] { preCalc, escapeCalc });
             Drawer drawer = new Drawer(channel.Reader, image, colouring);
 
-            Task.WhenAll(plotter.GetPlotter(), plotter.GetPlotter(), plotter.GetPlotter(), plotter.GetPlotter()).ContinueWith(_ => channel.Writer.Complete());
+            _ = Task.WhenAll(plotter.GetPlotter(), plotter.GetPlotter(), plotter.GetPlotter(), plotter.GetPlotter())
+                .ContinueWith(_ => channel.Writer.Complete());
             await Task.WhenAll(drawer.GetDrawer(), drawer.GetDrawer(), drawer.GetDrawer(), drawer.GetDrawer()).ContinueWith(_ =>
             {
 
