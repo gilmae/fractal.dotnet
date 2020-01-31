@@ -5,11 +5,6 @@ using System.Collections.Generic;
 using SixLabors.ImageSharp.PixelFormats;
 namespace mandelbrot.net
 {
-    public interface IColouring
-    {
-        Rgba32 GetColour(Point p);
-    }
-
     public class InterpolatedColour : IColouring
     {
         private CubicInterpolation redInterpolator;
