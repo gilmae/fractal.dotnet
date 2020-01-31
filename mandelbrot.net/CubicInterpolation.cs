@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using MathNet.Numerics.Interpolation;
+﻿using MathNet.Numerics.Interpolation;
 
 namespace mandelbrot.net
 {
