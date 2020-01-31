@@ -15,5 +15,7 @@
   <ItemGroup>
     <Folder Include="Calculators\" />
     <Folder Include="Colourers\" />
+    <Folder Include="lib\" />
+    <Folder Include="Models\" />
   </ItemGroup>
 </Project>
