@@ -21,7 +21,7 @@ namespace mandelbrot.net
 
 
         static ICalculator preCalc = new PreCalculator();
-        static ICalculator escapeCalc = new EscapeTimeCalculator(1000);
+        static ICalculator escapeCalc;
 
         static Channel<Point> points = Channel.CreateUnbounded<Point>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = false });
         static Channel<Point> channel = Channel.CreateUnbounded<Point>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = false });
@@ -32,27 +32,11 @@ namespace mandelbrot.net
             MainAsync(args).GetAwaiter().GetResult();
         }
 
-        static Options GetOptions(string[] args)
-        {
-            Options options = new Options();
-            Parser.Default.ParseArguments<Options>(args)
-                   .WithParsed(o =>
-                   {
-                       options.Colouring = o.Colouring;
-                       options.Gradient = o.Gradient;
-                       options.Height = o.Height;
-                       options.Imaginary = o.Imaginary;
-                       options.MaxIterations = o.MaxIterations;
-                       options.Real = o.Real;
-                       options.Width = o.Width;
-                       options.Zoom = o.Zoom;
-                   });
-            return options;
-        }
-
         static async Task MainAsync(string[] args)
         {
-            Options o = GetOptions(args);
+            var o = ((Parsed<Options>)Parser.Default.ParseArguments<Options>(args)).Value;
+            escapeCalc = new EscapeTimeCalculator(o.MaxIterations);
+
             var image = new Image<Rgba32>(o.Width, o.Height);
             FileStream fs = new FileStream(@"/Users/gilmae/mb.jpg", FileMode.OpenOrCreate, FileAccess.Write);
 
@@ -86,7 +70,7 @@ namespace mandelbrot.net
             Plotter plotter = new Plotter(points.Reader, channel.Writer, new[] { preCalc, escapeCalc });
             Drawer drawer = new Drawer(channel.Reader, image, colouring);
 
-            Task.WhenAll(plotter.GetPlotter(), plotter.GetPlotter(), plotter.GetPlotter(), plotter.GetPlotter()).ContinueWith(_=>channel.Writer.Complete());
+            Task.WhenAll(plotter.GetPlotter(), plotter.GetPlotter(), plotter.GetPlotter(), plotter.GetPlotter()).ContinueWith(_ => channel.Writer.Complete());
             await Task.WhenAll(drawer.GetDrawer(), drawer.GetDrawer(), drawer.GetDrawer(), drawer.GetDrawer()).ContinueWith(_ =>
             {
 
