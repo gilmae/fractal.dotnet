@@ -16,11 +16,13 @@ namespace mandelbrot.net
         private CubicInterpolation blueInterpolator;
         private CubicInterpolation greenInterpolator;
         private int _maxIterations;
+        private string _setColour;
 
         public InterpolatedColour(Options options)
         {
             var gradient = Newtonsoft.Json.JsonConvert.DeserializeObject<string[][]>(options.Gradient);
             _maxIterations = options.MaxIterations;
+            _setColour = options.SetColour;
 
             double[] xPoints = gradient.Select(x => double.Parse(x[0])).ToArray();
             var hexes = gradient.Select(x => new[] { x[1].Substring(0, 2), x[1].Substring(2, 2), x[1].Substring(4, 2) });
@@ -58,7 +60,7 @@ namespace mandelbrot.net
             }
             else
             {
-                return Rgba32.Black;
+                return Rgba32.FromHex(_setColour);
             }
         }
     }
