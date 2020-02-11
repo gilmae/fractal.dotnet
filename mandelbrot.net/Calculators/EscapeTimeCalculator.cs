@@ -31,6 +31,19 @@ namespace mandelbrot.net
             double x;
             double y;
 
+            /* The Mandelbrot function is to iterate the function z(n+1) = z(n)**2 + c, where z(0) = 0 + 0i,
+             * for each complex number c in the plane. The following is a slightly modified version of that
+             * function intended to avoid as many floating point multiplications as possible.
+             *
+             * see https://en.wikipedia.org/wiki/Mandelbrot_set#Escape_time_algorithm for details,
+             * and https://en.wikipedia.org/wiki/Mandelbrot_set#Optimizations for details on optimizations
+             * 
+             * We're also using doubles rather than complex numbers for two reasons:
+             * 
+             * 1. It makes the cardioid pre-calc check at the beginning of this function easier.
+             * 2. It will faciliate later adoption of BigFloat
+             * 
+             */
             while (rsquare + isquare <= MandelbrotBailout && iteration < _maxIterations)
             {
                 x = rsquare - isquare + real;
@@ -42,15 +55,17 @@ namespace mandelbrot.net
                 {
                     return new ICalculator.Result { Escaped = false, Iterations = _maxIterations };
                 }
+                
                 rsquare = x * x;
                 isquare = y * y;
                 zsquare = (x + y) * (x + y);
                 iteration += 1;
 
+                // At the end of the length of the periodocity check, set new co-ordinates
                 if (iteration%periodocity == 0)
                 {
-                    rOld = rsquare;
-                    iOld = isquare;
+                    rOld = x;
+                    iOld = y;
                 }
             }
 
