@@ -13,7 +13,7 @@ using CommandLine;
 
 namespace mandelbrot.net
 {
-    class Program
+    class Fractal
     {
         static ICalculator escapeCalc;
 
