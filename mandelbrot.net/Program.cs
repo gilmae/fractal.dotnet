@@ -1,6 +1,5 @@
 ﻿using System;
 
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,20 +11,15 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using CommandLine;
-using System.Threading;
 
 namespace mandelbrot.net
 {
     class Program
     {
-
-
-        static ICalculator preCalc = new PreCalculator();
         static ICalculator escapeCalc;
 
         static Channel<Point> points = Channel.CreateUnbounded<Point>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = false });
         static Channel<Point> channel = Channel.CreateUnbounded<Point>(new UnboundedChannelOptions { SingleWriter = false, SingleReader = false });
-
 
         static void Main(string[] args)
         {
@@ -36,13 +30,10 @@ namespace mandelbrot.net
         {
             var o = ((Parsed<Options>)Parser.Default.ParseArguments<Options>(args)).Value;
 
-            escapeCalc = new EscapeTimeCalculator(o.MaxIterations);
+            escapeCalc = new EscapeTimeCalculator(o);
 
-            var image = new Image<Rgba32>(o.Width, o.Height);
-            FileStream fs = new FileStream(@"/Users/gilmae/mb.jpg", FileMode.OpenOrCreate, FileAccess.Write);
-
-            double realStep = 3.0 / (o.Width * o.Zoom);
-            double imagStep = 3.0 / (o.Height * o.Zoom);
+            double realStep = 3.0 / (o.Width - 1) * o.Zoom;
+            double imagStep = 3.0 / (o.Height - 1) * o.Zoom;
             double step = Math.Min(realStep, imagStep);
 
             IColouring colouring = new NoColour();
@@ -51,35 +42,36 @@ namespace mandelbrot.net
                 colouring = new InterpolatedColour(o);
             }
 
+            var xRange = Enumerable.Range(0, o.Width - 1);
+            var realRange = xRange.Select(i => o.Real + step * (i - (o.Width - 1) / 2)).ToArray();
 
-            IEnumerable<int> imagRange = Enumerable.Range(0, o.Height - 1).Select(x => x);
-            IEnumerable<int> realRange = Enumerable.Range(0, o.Width - 1).Select(x => x);
+            var yRange = Enumerable.Range(0, o.Height - 1);
+            var imagRange = yRange.Select(i => o.Imaginary + step * (-1 * i + (o.Height - 1) / 2)).ToArray();
 
-            foreach (int y in imagRange.Select(v => v))
+            foreach (int y in yRange)
             {
-                double imag = o.Imaginary + step * (-1 * y + o.Height / 2);
-                foreach (int x in realRange)
+                foreach (int x in xRange)
                 {
-                    double real = o.Real + step * (x - o.Width / 2);
-
-                    points.Writer.TryWrite(new Point { x = x, y = y, real = real, imag = imag });
+                    points.Writer.TryWrite(new Point { x = x, y = y, real = realRange[x], imag = imagRange[y] });
                 }
             }
             points.Writer.Complete();
 
+            var image = new Image<Rgba32>(o.Width, o.Height);
 
-            Plotter plotter = new Plotter(points.Reader, channel.Writer, new[] { preCalc, escapeCalc });
+            Plotter plotter = new Plotter(points.Reader, channel.Writer, escapeCalc);
             Drawer drawer = new Drawer(channel.Reader, image, colouring);
 
             _ = Task.WhenAll(plotter.GetPlotter(), plotter.GetPlotter(), plotter.GetPlotter(), plotter.GetPlotter())
                 .ContinueWith(_ => channel.Writer.Complete());
+
             await Task.WhenAll(drawer.GetDrawer(), drawer.GetDrawer(), drawer.GetDrawer(), drawer.GetDrawer()).ContinueWith(_ =>
             {
-
-                image.SaveAsJpeg(fs);
-                fs.Close();
-                fs.Dispose();
-                image.Dispose();
+                using (FileStream fs = new FileStream(o.Output, FileMode.OpenOrCreate, FileAccess.Write))
+                {
+                    image.SaveAsJpeg(fs);
+                    image.Dispose();
+                }
             });
         }
 
@@ -112,13 +104,13 @@ namespace mandelbrot.net
         {
             private ChannelReader<Point> _points;
             private ChannelWriter<Point> _channelWriter;
-            private IList<ICalculator> _calculators;
+            private ICalculator _calculator;
 
-            public Plotter(ChannelReader<Point> points, ChannelWriter<Point> channelWriter, IList<ICalculator> calculators)
+            public Plotter(ChannelReader<Point> points, ChannelWriter<Point> channelWriter, ICalculator calculator)
             {
                 _points = points;
                 _channelWriter = channelWriter;
-                _calculators = calculators;
+                _calculator = calculator;
             }
 
 
@@ -135,24 +127,13 @@ namespace mandelbrot.net
 
             public Point Plot(Point p)
             {
-                foreach(ICalculator calculator in _calculators)
-                {
-                    var result = calculator.Calculate(p.real, p.imag);
-                    if (result.HasResult)
-                    {
-                        p.escaped = result.Escaped.Value;
-                        p.iterations = result.Iterations;
-                        return p;
-                    }
-                }
-                p.escaped = false;
-                p.iterations = int.MaxValue;
+                var result = _calculator.Calculate(p.real, p.imag);
+                p.escaped = result.Escaped.Value;
+                p.iterations = result.Iterations;
                 return p;
+                
             }
         }
-
-
-        
     }
 }
 

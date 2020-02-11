@@ -32,7 +32,10 @@ namespace mandelbrot.net
         public ColourMode Colouring { get; set; }
 
         [Option('s', "setcolour", Default ="000000", Required=false)]
-        public string SetColour {get;set;}
+        public string SetColour {get; set;}
+
+        [Option('o', "output", Default ="./mb.jpg", Required =false)]
+        public string Output { get; set; }
 
     }
 

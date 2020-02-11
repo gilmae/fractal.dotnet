@@ -9,7 +9,6 @@ namespace mandelbrot.net
         {
             public bool? Escaped { get; set; }
             public int Iterations { get; set; }
-            public bool HasResult { get; set; }
         }
     }
 
