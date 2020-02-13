@@ -37,6 +37,8 @@ namespace mandelbrot.net
         [Option('o', "output", Default ="./mb.jpg", Required =false)]
         public string Output { get; set; }
 
+        [Option('v', "verbose", Default=false, Required =false)]
+        public bool Verbose { get; set; }
     }
 
     public enum ColourMode

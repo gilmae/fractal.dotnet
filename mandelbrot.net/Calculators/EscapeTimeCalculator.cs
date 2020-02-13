@@ -7,9 +7,12 @@ namespace mandelbrot.net
         private const double MainCardioidBounds = 0.0625;
 
         private int _maxIterations;
+        private bool _verbose;
+
         public EscapeTimeCalculator(Options o)
         {
             _maxIterations = o.MaxIterations;
+            _verbose = o.Verbose;
         }
 
         public ICalculator.Result Calculate(double real, double imag)
@@ -17,6 +20,10 @@ namespace mandelbrot.net
             // Check that the point isn't in the main cardioid or the period-2 bulb
             if (Math.Pow(real + 1.0, 2.0) + Math.Pow(imag, 2.0) <= MainCardioidBounds)
             {
+                if (_verbose)
+                {
+                    Console.WriteLine($"{real} + {imag}i is in the main cardioid.");
+                }
                 return new ICalculator.Result { Escaped = false, Iterations = int.MaxValue };
             }
 
@@ -53,6 +60,11 @@ namespace mandelbrot.net
                 // Which means we will be in a loop, i.e. there is no escape, it's in the mandelbrot set.
                 if (x == rOld && y == iOld)
                 {
+                    if (_verbose)
+                    {
+                        Console.WriteLine($"{real} + {imag}i has a detected loop.");
+                    }
+
                     return new ICalculator.Result { Escaped = false, Iterations = _maxIterations };
                 }
                 
@@ -66,6 +78,18 @@ namespace mandelbrot.net
                 {
                     rOld = x;
                     iOld = y;
+                }
+            }
+
+            if (_verbose)
+            {
+                if (iteration >= _maxIterations)
+                {
+                    Console.WriteLine($"{real} + {imag}i does not escape.");
+                }
+                else
+                {
+                    Console.WriteLine($"{real} + {imag}i escapes after {iteration} iterations.");
                 }
             }
 

@@ -74,65 +74,9 @@ namespace mandelbrot.net
             });
         }
 
-        public class Drawer
-        {
-            private ChannelReader<Point> _reader;
-            private Image<Rgba32> _image;
-            private IColouring _colourer;
+        
 
-            public Drawer(ChannelReader<Point> reader, Image<Rgba32> image, IColouring colourer)
-            {
-                _reader = reader;
-                _image = image;
-                _colourer = colourer;
-            }
-
-            public async Task GetDrawer()
-            {
-                while (await _reader.WaitToReadAsync())
-                {
-                    while (_reader.TryRead(out Point p))
-                    {
-                        _image[p.x, p.y] = _colourer.GetColour(p);
-                    }
-                }
-            }
-        }
-
-        public class Plotter
-        {
-            private ChannelReader<Point> _points;
-            private ChannelWriter<Point> _channelWriter;
-            private ICalculator _calculator;
-
-            public Plotter(ChannelReader<Point> points, ChannelWriter<Point> channelWriter, ICalculator calculator)
-            {
-                _points = points;
-                _channelWriter = channelWriter;
-                _calculator = calculator;
-            }
-
-
-            public async Task GetPlotter()
-            {
-                while (await _points.WaitToReadAsync())
-                {
-                    while (_points.TryRead(out Point p))
-                    {
-                        _channelWriter.TryWrite(Plot(p));
-                    }
-                }
-            }
-
-            public Point Plot(Point p)
-            {
-                var result = _calculator.Calculate(p.real, p.imag);
-                p.escaped = result.Escaped.Value;
-                p.iterations = result.Iterations;
-                return p;
-                
-            }
-        }
+        
     }
 }
 
